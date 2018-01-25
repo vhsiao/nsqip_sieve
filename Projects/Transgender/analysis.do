@@ -6,6 +6,14 @@ cd "/Volumes/Encrypted/NSQIP/Projects"
 pwd
 do code_standard_variables "/Volumes/Encrypted/NSQIP/Data/Transgender" "transgender.dta"
 
+// Excel file for results
+local excel_file = "/Volumes/Encrypted/NSQIP/Projects/Transgender/results.xlsx"
+do initiate_excel "`excel_file'" "summary" "Variable Observations Mean SD"
+do initiate_excel "`excel_file'" "baseline" "Variable Observations Overall FTM MTF p"
+do initiate_excel "`excel_file'" "complication" "Variable Observations Overall FTM MTF p"
+do initiate_excel "`excel_file'" "prediction" "Variable OR p"
+do initiate_excel "`excel_file'" "operation class" "Complication FTM_top FTM_hysterectomy FTM_bottom MTF_top MTF_bottom Head_Neck"
+
 // Revision surgery, secondary procedrue, complication not included: ""revision" "excision tracheal stenosis" "closure ureterocutaneous fistula" "exc breast les preop plmt rad marker" "clsr urethrostomy""
 // Unknown CPT: "nipple/areola reconstruction", "musc myocutaneous/faciocutaneous" "unlisted procedure breast" "adjnt tis trnsfr" "tissue grafts other"
 local exclusion_criteria `""revision" "excision tracheal stenosis" "closure ureterocutaneous fistula" "exc breast les preop plmt rad marker" "nipple/areola reconstruction" "musc myocutaneous" "unlisted procedure breast" "mastopexy" "clsr urethrostomy" "adjnt tis trnsfr" "panniculectomy" "cystourethroscopy" "perineoplasty" "torsion tstis" "rmvl prosthetic vaginal" "urethromeatoplasty w/mucosal advancement" "tissue grafts other""'
@@ -15,8 +23,6 @@ foreach exclusion of local exclusion_criteria {
 
 /* Create Variable for MTF vs FTM top surgery patients and encode */
 /* Infer FTM vs. MTF */
-
-
 generate transgender_type = .
 generate top_surgery = 0
 local ftm_keywords `" "mastectomy" "reduction mammaplasty" "intersex surg female male" "hysterect" "vag hyst" "vaginectomy" "testicular prosth" "scrotoplasty" "tah" "unlisted laparoscopy procedure uterus" "vulvectomy" "breast reconstruction""'
@@ -107,31 +113,74 @@ replace any_comorbidities = 1 if any_comorbidities > 0
 local complications `complications' any_complication
 
 /* FTM vs. MTF */
-foreach var of varlist `cbaseline_characteristics' {
-	disp "Variable: `var'"
-	summarize `var'
-	tab `var' if `var' < ., sort
-	tab `var' transgender_type if `var'<., chi2 exact row column
-}
+local summary_i=2
+local baseline_i=2
+local complication_i=2
+local prediction_i=2
 
 foreach var of varlist `nbaseline_characteristics' {
 	disp "Variable: `var'"
-	summarize `var'
-	ttest `var', by(transgender_type)
+	do put_in_excel "`excel_file'" "baseline" `baseline_i' "ttest" transgender_type `var' 
+	local summary_i = `summary_i' + 1
+	local baseline_i = `baseline_i' + 1
+}
+
+foreach var of varlist `cbaseline_characteristics' {
+	disp "Variable: `var'"
+	do put_in_excel "`excel_file'" "summary" `summary_i' "summarize" `var'
+	do put_in_excel "`excel_file'" "baseline" `baseline_i' "chi2" transgender_type `var' 
+	local summary_i = `summary_i' + 1
+	local baseline_i = `baseline_i' + 1
 }
 
 foreach var of varlist `complications' {
-	disp "Variable: `var'"
-	tab `var' if `var' < ., sort
-	tab `var' transgender_type if `var'<., chi2 exact row column
+	disp "Variable: `independent_var'"
+	do put_in_excel "`excel_file'" "complication" `complication_i' "chi2" transgender_type `var'
+	local complication_i = `complication_i' + 1
+}
+
+
+putexcel set "`excel_file'", sheet("operation class") modify
+local operation_class_row = 2
+/* Complications (row) by Operation Class (column) */
+foreach dependent_var of varlist `complications' {
+	putexcel A`operation_class_row'=("`dependent_var'")
+	local operation_class_row = `operation_class_row' + 1
+}
+forvalues i=1/6 {
+	disp "Variable: `independent_var'"
+	
+	local operation_class_col = 65 + `i'
+	local col = "`=char(`operation_class_col')'"
+	local overall_freq_val = 0
+	
+	local operation_class_row = 2
+	local j = 1
+	foreach dependent_var of varlist `complications' {
+		di "Complication: `dependent_var'"
+		tab operation_class `dependent_var' if operation_class<., row column matcell(freq)
+		matlist(freq)
+		return list
+		local freq_val_`j' = freq[`i', 2]
+		if `freq_val_`j'' < . {
+			local overall_freq_val = `overall_freq_val' + `freq_val_`j''
+		}
+		local j = `j' + 1
+	}
+	
+	local operation_class_row = 2
+	local j = 1
+	foreach dependent_var of varlist `complications' {
+		local percent_val_`j' = `freq_val_`j'' / `overall_freq_val' * 100
+		local percent_val_`j' : display %03.2f `percent_val_`j''
+		putexcel `col'`operation_class_row'=("`freq_val_`j'' (`percent_val_`j''%)")
+		local j = `j' + 1
+		local operation_class_row = `operation_class_row' + 1
+	}
 }
 
 tab operation_class surgspec, row column
 tab operation surgspec, row column
-
-foreach var_complic of varlist `complications' {
-	tab `var_complic' operation_class, chi2 exact row column
-}
 
 generate mtf = 0
 replace mtf=1 if transgender_type==2
@@ -140,8 +189,11 @@ local predictors age BMI sex_e race2_e smoke_e fnstatus2_e diabetes2_e ///
 	hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e any_comorbidities ///
 	plastics_e ortho_e gensurg_e gyn_e urology_e ent_e resident_involvement_e mtf top_surgery
 
+local i=2
 foreach var of varlist `predictors' {
-	logistic any_complication `var'
+	// logistic any_complication `var'
+	do put_in_excel "`excel_file'" "prediction" `prediction_i' "logistic" `var' any_complication
+	local prediction_i = `prediction_i' + 1
 }
 
 /* Does the difference in complication rates persist when possible cofounders are 
