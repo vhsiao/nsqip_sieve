@@ -8,7 +8,6 @@ do code_standard_variables "/Volumes/Encrypted/NSQIP/Data/Transgender" "transgen
 
 // Excel file for results
 local excel_file = "/Volumes/Encrypted/NSQIP/Projects/Transgender/results.xlsx"
-do initiate_excel "`excel_file'" "summary" "Variable Observations Mean SD"
 do initiate_excel "`excel_file'" "baseline" "Variable Observations Overall FTM MTF p"
 do initiate_excel "`excel_file'" "complication" "Variable Observations Overall FTM MTF p"
 do initiate_excel "`excel_file'" "prediction" "Variable OR p"
@@ -91,8 +90,8 @@ generate mtf_bottom_e = (operation_class==5)
 generate head_neck_e = (operation_class==6)
 
 // Compound MI/Stroke outcome
-//TODO fix
-// generate mi_stroke_e = 1 if cdmi_e==1 | cva2_e==1
+generate cva_mi_e = 0
+replace cva_mi_e = 1 if (cdmi_e==1 | cnscva_e==1)
 
 /* Summary statistics */
 local nbaseline_characteristics age BMI
@@ -102,9 +101,7 @@ local cbaseline_characteristics sex_e race2_e smoke_e fnstatus2_e diabetes2_e //
 local complications new_sssi_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e ///
 	neurodef_e rbc_need_e
 	
-// mi/stroke
-	
-egen any_complication = rowtotal(new_sssi_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e neurodef_e rbc_need_e)
+egen any_complication = rowtotal(new_sssi_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e neurodef_e rbc_need_e cva_mi_e)
 replace any_complication = 1 if any_complication > 0 
 
 egen any_comorbidities = rowtotal(diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e)
@@ -121,13 +118,11 @@ local prediction_i=2
 foreach var of varlist `nbaseline_characteristics' {
 	disp "Variable: `var'"
 	do put_in_excel "`excel_file'" "baseline" `baseline_i' "ttest" transgender_type `var' 
-	local summary_i = `summary_i' + 1
 	local baseline_i = `baseline_i' + 1
 }
 
 foreach var of varlist `cbaseline_characteristics' {
 	disp "Variable: `var'"
-	do put_in_excel "`excel_file'" "summary" `summary_i' "summarize" `var'
 	do put_in_excel "`excel_file'" "baseline" `baseline_i' "chi2" transgender_type `var' 
 	local summary_i = `summary_i' + 1
 	local baseline_i = `baseline_i' + 1
@@ -162,16 +157,7 @@ forvalues i=1/6 {
 		matlist(freq)
 		return list
 		local freq_val_`j' = freq[`i', 2]
-		if `freq_val_`j'' < . {
-			local overall_freq_val = `overall_freq_val' + `freq_val_`j''
-		}
-		local j = `j' + 1
-	}
-	
-	local operation_class_row = 2
-	local j = 1
-	foreach dependent_var of varlist `complications' {
-		local percent_val_`j' = `freq_val_`j'' / `overall_freq_val' * 100
+		local percent_val_`j' = `freq_val_`j'' / (`freq_val_`j'' + freq[`i', 1]) * 100
 		local percent_val_`j' : display %03.2f `percent_val_`j''
 		putexcel `col'`operation_class_row'=("`freq_val_`j'' (`percent_val_`j''%)")
 		local j = `j' + 1
@@ -192,7 +178,7 @@ local predictors age BMI sex_e race2_e smoke_e fnstatus2_e diabetes2_e ///
 local i=2
 foreach var of varlist `predictors' {
 	// logistic any_complication `var'
-	do put_in_excel "`excel_file'" "prediction" `prediction_i' "logistic" `var' any_complication
+	do put_in_excel "`excel_file'" "prediction" `prediction_i' "logistic" any_complication `var'
 	local prediction_i = `prediction_i' + 1
 }
 

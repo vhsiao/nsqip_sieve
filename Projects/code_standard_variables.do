@@ -14,7 +14,7 @@ tab prncptx
 generate BMI = (weight/height^2) * 703 // Generate BMI variable
 
 // modify diabetes
-generate diabetes2 = lower(diabetes)
+generate diabetes2 = diabetes
 replace diabetes2 = "yes" if strpos(diabetes, "INSULIN") | strpos(diabetes, "ORAL")
 
 // Generate sepsis variable
@@ -66,16 +66,14 @@ foreach var of varlist `categorical_vars' {
 local binary1 = "dehis oupneumo othdvt oprenafl urninfec cnscva supinfec wndinfd orgspcssi neurodef reintub pulembol failwean cnscoma cdarrest cdmi othbleed othgrafl othsysep othseshock"
 local binary2= "renafail cva cvano discancr hxmi hxchf hxcopd hxtia hxpvd hxangina dialysis hypermed diabetes2 returnor reoperation steroid smoke ascites wtloss electsurg dnr etoh ventilat ventpatos restpain prvpci prvpcs cpneumon esovar para quad bleeddis transfus chemo radio pregnancy proper30 emergncy tumorcns"
 foreach var of local binary1 {
-	capture replace `var' = lower(`var')
 	capture replace `var' = "" if `var'=="."
 	generate `var'_e = 0
-	replace `var'_e = 1 if `var'!="" & ~strpos(`var', "no complication")
+	replace `var'_e = 1 if `var'!="" & ~strpos(lower(`var'), "no complication")
 }
 foreach var of local binary2 {
-	capture replace `var' = lower(`var')
 	capture replace `var' = "" if `var'=="."
 	generate `var'_e = 0
-	replace `var'_e = 1 if `var'!="" & `var'!="no"
+	replace `var'_e = 1 if `var'!="" & lower(`var')!="no"
 }
 
 generate death_e = 0
@@ -87,7 +85,7 @@ generate new_sssi_e = 1 if supinfec=="Superficial Incisional SSI" & sssipatos~="
 generate new_dssi_e = 1 if wndinfd=="Deep Incisional SSI" & dssipatos~="Yes"
 generate new_ossi_e = 1 if orgspcssi=="Organ/Space SSI" & ossipatos~="Yes"
 
-generate gensurg_e = 1 if surgspec=="General Surgery"
+generate gensurg_e = 1 if surgspec=="General Gurgery"
 generate gyn_e = 1 if surgspec=="Gynecology"
 generate ortho_e = 1 if surgspec=="Orthopedics"
 generate ent_e = 1 if strpos(surgspec, "Otolaryngology")
@@ -102,3 +100,5 @@ foreach var of varlist new_sssi_e new_dssi_e new_ossi_e rbc_need_e gensurg_e gyn
 replace fnstatus2_e = 0 if fnstatus2_e==1
 replace fnstatus2_e = 1 if fnstatus2_e > 1 & fnstatus2_e < . //Partially/Totally Dependent
 label define fnstatus2_e 1 "Partially/Totally Dependent", modify
+
+cd "/Volumes/Encrypted/NSQIP/Projects"
