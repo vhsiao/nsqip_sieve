@@ -87,19 +87,28 @@ generate head_neck_e = (operation_class==6)
 generate mtf_surgery = 0
 replace mtf_surgery=1 if transgender_type==2
 
-local nbaseline_characteristics age BMI
-local cbaseline_characteristics sex_e race2_e smoke_e fnstatus2_e diabetes2_e ///
-	 hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e ///
-	 surgspec_e resident_involvement_e top_surgery
-local complications new_sssi_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e ///
-	neurodef_e rbc_need_e
-	
-//egen any_complication = rowtotal(new_sssi_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e neurodef_e rbc_need_e)
-egen any_complication = rowtotal(supinfec_e dehis_e oupneumo_e othdvt_e urninfec_e renafail_e neurodef_e rbc)
-replace any_complication = 1 if any_complication > 0 & any_complication < .
+do compound_variable "sepsis_septic_shock" "othsysep_e othseshock_e"
+do compound_variable "mi_cardiac_arrest_cva" "cdmi_e cdarrest_e cnscva_e"
+do compound_variable "hx_tia_cva" "hxtia_e cva_e cvano_e"
+do compound_variable "hx_cardiac_ischemia" "hxmi_e hxangina_e prvpci_e prvpcs_e"
+do compound_variable "hx_pvd_rest_pain" "hxpvd_e restpain_e"
+do compound_variable "failwean_reintub" "failwean_e reintub_e"
 
-egen any_comorbidities = rowtotal(diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e)
-replace any_comorbidities = 1 if any_comorbidities > 0 & any_complication < .
+local nbaseline_characteristics age BMI
+local cbaseline_characteristics sex_e race_american_indian_e race_asian_e race_black_e race_nh_pi_e race_white_e ///
+	 smoke_e fnstatus2_e diabetes2_e prsepsis2_e ///
+	 hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e ///
+	 hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain ///
+	 surgspec_e resident_involvement_e top_surgery
+	 
+local complications new_sssi_e new_dssi_e new_ossi_e dehis_e ///
+	oupneumo_e othdvt_e urninfec_e renafail_e cnscva_e neurodef_e pulembol_e othbleed_e ///
+	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e
+
+local comorbidities diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e
+
+do compound_variable "any_complication" "`complications'"
+do compound_variable "any_comorbidities" "`comorbidities'"	
 
 local complications `complications' any_complication
 
@@ -117,6 +126,12 @@ label variable head_neck_e "Head/Neck Surgery"
 label variable any_complication "Any Complication"
 label variable any_comorbidities "Any Comorbidities"
 label variable mtf_surgery "MTF"
+label variable sepsis_septic_shock "Systemic Sepsis or Septic Schock"
+label variable mi_cardiac_arrest_cva "MI, Cardiac Arrest or CVA"
+label variable hx_tia_cva "History of TIA/CVA"
+label variable hx_cardiac_ischemia "History of Cardiac Ischemia"
+label variable hx_pvd_rest_pain "History of PVD, rest pain or gangrene"
+label variable failwean_reintub "Reintubation or Failure to Wean Vent"
 
 /* FTM vs. MTF */
 local summary_i=2
@@ -177,10 +192,11 @@ forvalues i=1/6 {
 tab operation_class surgspec, row column
 tab operation surgspec, row column
 
-local predictors age BMI sex_e race2_e smoke_e fnstatus2_e diabetes2_e ///
-	hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e any_comorbidities ///
-	plastics_e ortho_e gensurg_e gyn_e urology_e ent_e resident_involvement_e mtf_surgery top_surgery
-
+local predictors age BMI race2_e ///
+	smoke_e fnstatus2_e diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e any_comorbidities ///
+	plastics_e ortho_e gensurg_e gyn_e urology_e ent_e resident_involvement_e ///
+	mtf_surgery top_surgery ftm_top_e ftm_internal_e ftm_bottom_e mtf_top_e mtf_bottom_e head_neck_e any_comorbidities ///
+	
 local i=2
 foreach var of varlist `predictors' {
 	do put_in_excel "`excel_file'" "prediction" `prediction_i' "logistic" any_complication `var'
