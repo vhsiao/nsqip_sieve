@@ -30,7 +30,7 @@ quietly {
 			local sd_1 : display %03.2f `r(sd_1)'
 			local sd_2 : display %03.2f `r(sd_2)'
 			local p : display %03.2f `p'
-			putexcel A`rownum'=("`independent_var'") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
+			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		}
 	}
 	else if "`table_type'" == "summarize" {
@@ -41,7 +41,7 @@ quietly {
 			local mu : display %03.2f `r(mean)'
 			local sd : display %03.2f `r(sd)'
 			
-			putexcel A`rownum'=("`dependent_var'") B`rownum'=("`r(N)'") C`rownum'=("`mu'") D`rownum'=("`sd'")
+			putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("`r(N)'") C`rownum'=("`mu'") D`rownum'=("`sd'")
 		}
 	}
 	else if "`table_type'" == "chi2" {
@@ -65,7 +65,7 @@ quietly {
 			local overall_percent_val : display %03.2f `overall_percent_val'
 			
 			local p : display %03.2f `r(p)'
-			putexcel A`rownum'=("`independent_var'") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'")
+			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'")
 		}
 	}
 	else if "`table_type'" == "tab" {
@@ -79,9 +79,9 @@ quietly {
 	else if "`table_type'" == "logistic" {
 		// logistic any_complication `var'
 		noisily {
-			capture noisily logistic `dependent_var' `independent_var'
+			capture logistic `dependent_var' `independent_var' 
 			if _rc!=0 {
-				putexcel A`rownum'=("`independent_var'") B`rownum'=("Outcome does not vary") C`rownum'=("N/A")
+				putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("Outcome does not vary") C`rownum'=("N/A")
 			} 
 			else {
 				return list
@@ -96,7 +96,7 @@ quietly {
 				local ll: display %03.2f `ll'
 				local ul: display %03.2f `ul'
 				local p: display %03.2f `p'
-				putexcel A`rownum'=("`independent_var'") B`rownum'=("`or' (`ll'-`ul')") C`rownum'=("`p'")
+				putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`or' (`ll'-`ul')") C`rownum'=("`p'")
 			}
 		}
 	}

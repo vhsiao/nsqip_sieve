@@ -64,16 +64,24 @@ foreach var of varlist `categorical_vars' {
 }
 
 local binary1 = "dehis oupneumo othdvt oprenafl urninfec cnscva supinfec wndinfd orgspcssi neurodef reintub pulembol failwean cnscoma cdarrest cdmi othbleed othgrafl othsysep othseshock"
-local binary2= "renafail cva cvano discancr hxmi hxchf hxcopd hxtia hxpvd hxangina dialysis hypermed diabetes2 returnor reoperation steroid smoke ascites wtloss electsurg dnr etoh ventilat ventpatos restpain prvpci prvpcs cpneumon esovar para quad bleeddis transfus chemo radio pregnancy proper30 emergncy tumorcns"
+local binary2= "renafail cva cvano discancr hxmi hxchf hxcopd hxtia hxpvd hxangina dialysis hypermed diabetes2 returnor reoperation steroid smoke ascites wtloss electsurg dnr etoh ventilat ventpatos restpain prvpci prvpcs cpneumon esovar para quad bleeddis transfus chemo radio pregnancy proper30 emergncy tumorcns unplannedreadmission1 unplannedreadmission2 unplannedreadmission3 unplannedreadmission4 unplanreadmission5"
 foreach var of local binary1 {
 	capture replace `var' = "" if `var'=="."
-	generate `var'_e = 0
-	replace `var'_e = 1 if `var'!="" & ~strpos(lower(`var'), "no complication")
+	generate `var'_e = .
+	label variable `var'_e "`: var label `var''"
+	capture {
+		replace `var'_e = 1 if `var'!="" & ~strpos(lower(`var'), "no complication")
+		replace `var'_e = 0 if `var'!="" & strpos(lower(`var'), "no complication")
+	}
 }
 foreach var of local binary2 {
 	capture replace `var' = "" if `var'=="."
-	generate `var'_e = 0
-	replace `var'_e = 1 if `var'!="" & lower(`var')!="no"
+	generate `var'_e = .
+	label variable `var'_e "`: var label `var''"
+	capture {
+		replace `var'_e = 1 if `var'!="" & lower(`var')!="no"
+		replace `var'_e = 0 if `var'!="" & lower(`var')=="no"
+	}
 }
 
 generate death_e = 0
@@ -100,5 +108,28 @@ foreach var of varlist new_sssi_e new_dssi_e new_ossi_e rbc_need_e gensurg_e gyn
 replace fnstatus2_e = 0 if fnstatus2_e==1
 replace fnstatus2_e = 1 if fnstatus2_e > 1 & fnstatus2_e < . //Partially/Totally Dependent
 label define fnstatus2_e 1 "Partially/Totally Dependent", modify
+
+/* Variable Labels */
+label variable diabetes2_e "Diabetes"
+label variable BMI "BMI"
+label variable race_american_indian_e "Race: American Indian or Alaska Native"
+label variable race_asian_e "Race: Asian"
+label variable race_black_e "Race: Black of African American"
+label variable race_nh_pi_e "Native Hawaiian or Pacific Islander"
+label variable race_white_e "White"
+label variable resident_involvement_e "Resident Involved"
+label variable race2_e "Race"
+label variable prsepsis2_e "Previous Sepsis"
+label variable death_e "Death"
+label variable rbc_need_e "Need for RBC <72h of Operation"
+label variable new_sssi_e "New Superficial Surgical Site Infection"
+label variable new_dssi_e "New Deep Surgical Site Infection"
+label variable new_ossi_e "New Organ Space Infection"
+label variable gensurg_e "General Surgery"
+label variable gyn_e "Gynecology"
+label variable ortho_e "Orthopedics"
+label variable ent_e "Otolaryngology (ENT)"
+label variable plastics_e "Plastics"
+label variable urology_e "Urology
 
 cd "/Volumes/Encrypted/NSQIP/Projects"
