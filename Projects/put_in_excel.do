@@ -29,8 +29,9 @@ quietly {
 			local mu_2 : display %03.2f `r(mu_2)'
 			local sd_1 : display %03.2f `r(sd_1)'
 			local sd_2 : display %03.2f `r(sd_2)'
-			local p : display %03.2f `p'
-			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
+			local p : display %03.2f `r(p)'
+			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("Mean `overall_mean' (SD=`overall_sd')") D`rownum'=("Mean `mu_1' (SD=`sd_1')") E`rownum'=("Mean `mu_2' (SD=`sd_2')") F`rownum'=("`p'")
+		
 		}
 	}
 	else if "`table_type'" == "summarize" {

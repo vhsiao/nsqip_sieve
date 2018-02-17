@@ -6,7 +6,13 @@ set more off
 
 // This is a 5000 observations (500 from each year)
 cd "/Volumes/Encrypted/NSQIP/Data/"
+use "./merged/nsqip.dta"
+
+// This is a 5000 observations (500 from each year)
+/*
+cd "/Volumes/Encrypted/NSQIP/Data/"
 use "./Samples/merged/nsqip.dta"
+*/
 
 // First renaming all variables to lowercase to avoid case confusion
 rename *, lower
@@ -86,8 +92,9 @@ quietly: {
 	// Now convert to categoricals and rename them all at once
 	foreach var of varlist `categorical_variable_list' {
 		//encode `var', generate(cat_`var')
-		capture confirm encode `var', generate(`var'_2)
+		capture noisily encode `var', generate(`var'_2)
 		drop `var'
+		capture noisily rename `var'_2 `var'
 	}
 }
 

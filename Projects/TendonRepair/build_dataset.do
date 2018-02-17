@@ -28,10 +28,10 @@ CPT Codes
 19.	Extensor tendon repair, distal insertion (mallet finger), closed, splinting with or without percutaneous pinning (26432)
 */
 
-egen tendon_cpt = anyvalue(cpt), value(26350 26352 26356 26357 26358 26370 26372 26373 26390 26392 26410 26412 26415 26410 26412 26415 26416 26418 26420 26426 26428 26432)
+
+egen tendon_cpt = anymatch(cpt othercpt1 othercpt2 othercpt3 othercpt4 othercpt5 othercpt6 othercpt7 othercpt8 othercpt9 othercpt10 concpt1 concpt2 concpt3 concpt4 concpt5 concpt6 concpt7 concpt8 concpt9 concpt10 reoporcpt1 reopor2cpt1), values(26350 26352 26356 26357 26358 26370 26372 26373 26390 26392 26410 26412 26415 26410 26412 26415 26416 26418 26420 26426 26428 26432)
 drop if missing(tendon_cpt)
 
-// keep if strpos(podiag_icd9, "302.5") | podiag_icd9=="302.85" | (podiag_icd9=="302.6") | strpos(podiag_icd10, "F64.")
 count
 
 // Get just the variables of interest
