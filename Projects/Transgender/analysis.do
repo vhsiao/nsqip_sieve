@@ -12,6 +12,8 @@ do initiate_excel "`excel_file'" "baseline" "Variable Observations Overall FTM M
 do initiate_excel "`excel_file'" "complication" "Variable Observations Overall FTM MTF p"
 do initiate_excel "`excel_file'" "prediction" "Variable OR_Any_Complication p"
 do initiate_excel "`excel_file'" "operation class" "Complication FTM_top FTM_hysterectomy FTM_bottom MTF_top MTF_bottom Head_Neck"
+do initiate_excel "`excel_file'" "surgical_subspecialty" " Subspecialty_vs_Operation"
+do initiate_excel "`excel_file'" "surgical_subspecialty_2" "Subspecialty_vs_Operation_Class"
 
 // Revision surgery, secondary procedrue, complication not included: ""revision" "excision tracheal stenosis" "closure ureterocutaneous fistula" "exc breast les preop plmt rad marker" "clsr urethrostomy""
 // Unknown CPT: "nipple/areola reconstruction", "musc myocutaneous/faciocutaneous" "unlisted procedure breast" "adjnt tis trnsfr" "tissue grafts other"
@@ -88,7 +90,8 @@ generate head_neck_e = (operation_class==6)
 generate mtf_surgery = 0
 replace mtf_surgery=1 if transgender_type==2
 
-local nbaseline_characteristics age BMI optime
+local nbaseline_characteristics age BMI optime ///
+	 prsodm prbun prcreat pralbum prbili prsgot pralkph prwbc prhct prplate prptt prinr
 local cbaseline_characteristics sex_e race_american_indian_e race_asian_e race_black_e race_nh_pi_e race_white_e ///
 	 smoke_e fnstatus2_e diabetes2_e prsepsis2_e ///
 	 hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e ///
@@ -98,10 +101,9 @@ local cbaseline_characteristics sex_e race_american_indian_e race_asian_e race_b
 	 
 local complications new_sssi_e new_dssi_e new_ossi_e dehis_e ///
 	oupneumo_e othdvt_e urninfec_e renafail_e cnscva_e neurodef_e pulembol_e othbleed_e ///
-	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e reoperation1_e unplannedreadmission1_e
+	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e reoperation1_e
 
 local comorbidities smoke_e diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain
-
 
 
 local complications `complications' any_complication
@@ -124,26 +126,27 @@ local summary_i=2
 local baseline_i=2
 local complication_i=2
 local prediction_i=2
+local subspecialty_i=2
+local subspecialty_i_2=2
 
 foreach var of varlist `nbaseline_characteristics' {
 	disp "Variable: `var'"
-	do put_in_excel "`excel_file'" "baseline" `baseline_i' "ttest" transgender_type `var' 
+	do put_in_excel "`excel_file'" "baseline" `baseline_i' 1 "ttest" transgender_type `var' 
 	local baseline_i = `baseline_i' + 1
 }
 
 foreach var of varlist `cbaseline_characteristics' {
 	disp "Variable: `var'"
-	do put_in_excel "`excel_file'" "baseline" `baseline_i' "chi2" transgender_type `var' 
+	do put_in_excel "`excel_file'" "baseline" `baseline_i' 1 "chi2" transgender_type `var' 
 	local summary_i = `summary_i' + 1
 	local baseline_i = `baseline_i' + 1
 }
 
 foreach var of varlist `complications' {
 	disp "Variable: `independent_var'"
-	do put_in_excel "`excel_file'" "complication" `complication_i' "chi2" transgender_type `var'
+	do put_in_excel "`excel_file'" "complication" `complication_i' 1 "chi2" transgender_type `var'
 	local complication_i = `complication_i' + 1
 }
-
 
 putexcel set "`excel_file'", sheet("operation class") modify
 local operation_class_row = 2
@@ -175,8 +178,8 @@ forvalues i=1/6 {
 	}
 }
 
-tab operation_class surgspec, row column
-tab operation surgspec, row column
+do put_in_excel "`excel_file'" "surgical_subspecialty" `subspecialty_i' 2 "tab" surgspec_e operation
+do put_in_excel "`excel_file'" "surgical_subspecialty_2" `subspecialty_i_2' 2 "tab" surgspec_e operation_class 
 
 local predictors age BMI optime race2_e ///
 	smoke_e fnstatus2_e highasa diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e any_comorbidities ///
@@ -187,12 +190,13 @@ local predictors age BMI optime race2_e ///
 	
 local i=2
 foreach var of varlist `predictors' {
-	do put_in_excel "`excel_file'" "prediction" `prediction_i' "logistic" any_complication `var'
+	do put_in_excel "`excel_file'" "prediction" `prediction_i' 1 "logistic" any_complication `var'
 	local prediction_i = `prediction_i' + 1
 }
 
 /* Does the difference in complication rates persist when possible cofounders are 
 included all in the same model?*/
+
 logistic any_complication age BMI optime race_black_e race_white_e diabetes2_e hypermed_e any_comorbidities mtf_surgery top_surgery prptt
 
 

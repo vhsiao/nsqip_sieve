@@ -4,9 +4,10 @@ quietly {
 	local excel_file `1'
 	local excel_sheet `2'
 	local rownum `3'
-	local table_type `4'
-	local dependent_var `5'
-	local independent_var `6'
+	local colnum `4'
+	local table_type `5'
+	local dependent_var `6'
+	local independent_var `7'
 
 	//use "`excel_file'"
 	putexcel set "`excel_file'", sheet("`excel_sheet'") modify
@@ -70,11 +71,44 @@ quietly {
 		}
 	}
 	else if "`table_type'" == "tab" {
-		//tab `var' if `var' < ., sort
 		noisily {
-			tab `dependent_var' if `dependent_var'<., sort
+			disp "Independent variable: `independent_var'"
+			disp "Dependent variable: `dependent_var'"
+			tab `independent_var' `dependent_var' if `independent_var'<., row column matcell(freq)
 			return list
-			
+			matlist(freq)
+			//matlist(names)
+			// Get number of dependent and independent classes.
+			putexcel A`rownum'=("`:var label `independent_var''")
+			putexcel B`rownum'=("`:var label `dependent_var''")
+			tab `independent_var' `dependent_var' if `independent_var'<., row column matcell(freq)
+			matlist(freq)
+			return list
+			matrix V = J(`r(c)', 1, 1)
+			matrix rowtotals = freq * V
+			local col_last = 65 + `r(c)' + 1
+			local col_last = "`=char(`col_last')'"
+			putexcel `col_last'`rownum'=("Total")
+			local row = `rownum' + 1
+			forvalues j=1/`r(c)' {
+				local col = 65 + `j' 
+				local col = "`=char(`col')'"
+				putexcel `col'`row'=("`: label `dependent_var' `j''")
+			}
+			forvalues i=1/`r(r)' {
+				local row = `rownum' + `i' + 1
+				local row_sum = rowtotals[`i', 1]
+				putexcel A`row'=("`: label `independent_var' `i''")
+				putexcel `col_last'`row'=("`row_sum' (100.00%)")
+				forvalues j=1/`r(c)' {
+					local col = 65 + `j'
+					local col = "`=char(`col')'"
+					local freq = freq[`i', `j']
+					local perc = (`freq'/`row_sum') * 100
+					local perc : display %03.2f `perc'
+					putexcel `col'`row'=("`freq' (`perc'%)")
+				}
+			}
 		}
 	}
 	else if "`table_type'" == "logistic" {
@@ -102,6 +136,6 @@ quietly {
 		}
 	}
 	else {
-		noisily disp "Unrecognized table type" `table_type'
+		disp "Unrecognized table type `table_type'"
 	}
 }
