@@ -1,11 +1,5 @@
 cls
-clear all
 set more off
-
-local project_file `1'
-local dta_file `2'
-
-use "`project_file'/`dta_file'"
 
 replace prncptx = lower(prncptx)
 tab prncptx
@@ -120,11 +114,12 @@ local cbaseline_characteristics sex_e race_american_indian_e race_asian_e race_b
 local complications new_sssi_e new_dssi_e new_ossi_e dehis_e ///
 	oupneumo_e othdvt_e urninfec_e renafail_e cnscva_e neurodef_e pulembol_e othbleed_e ///
 	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e reoperation1_e unplannedreadmission1_e
-
+	
 local comorbidities smoke_e diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain
 
 do compound_variable "any_complication" "`complications'"
 do compound_variable "any_comorbidities" "`comorbidities'"	
+
 
 local complications `complications' any_complication
 
@@ -151,7 +146,7 @@ label variable gyn_e "Gynecology"
 label variable ortho_e "Orthopedics"
 label variable ent_e "Otolaryngology (ENT)"
 label variable plastics_e "Plastics"
-label variable urology_e "Urology
+label variable urology_e "Urology"
 label variable any_complication "Any Complication"
 label variable any_comorbidities "Any Comorbidities"
 label variable sepsis_septic_shock "Systemic Sepsis or Septic Schock"

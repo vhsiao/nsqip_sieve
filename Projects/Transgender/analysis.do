@@ -4,7 +4,13 @@ set more off
 
 cd "/Volumes/Encrypted/NSQIP/Projects"
 pwd
-do code_standard_variables "/Volumes/Encrypted/NSQIP/Data/Transgender" "transgender.dta"
+use "/Volumes/Encrypted/NSQIP/Data/Transgender/transgender.dta"
+drop if strpos(surgspec, "Ortho") //Weird outlier
+local project_file `1'
+local dta_file `2'
+
+// do code_standard_variables "/Volumes/Encrypted/NSQIP/Data/Transgender" "transgender.dta"
+do code_standard_variables
 
 // Excel file for results
 local excel_file = "/Volumes/Encrypted/NSQIP/Projects/Transgender/results.xlsx"
@@ -54,6 +60,9 @@ foreach cptx of varlist `cptx_fields' {
 			replace top_surgery = 1 if strpos(`cptx', "`kwd'") & top_surgery==0
 		}
 		
+		replace ftm_top_e = 1 if top_surgery==1 & transgender_type==1
+		replace mtf_top_e = 1 if top_surgery==1 & transgender_type==2
+		
 		replace hysterectomy_e = 1 if strpos(`cptx', "hysterect") | strpos(`cptx', "vag hyst") | strpos(`cptx', "tah") | strpos(`cptx', "uterus")
 		replace vaginectomy_vulvectomy_e = 1 if strpos(`cptx', "vaginectomy") | strpos(`cptx', "vulvectomy")
 		replace scrotoplasty_e = 1 if strpos(`cptx', "scrotoplasty") | strpos(`cptx', "testicular prosth")
@@ -63,36 +72,36 @@ foreach cptx of varlist `cptx_fields' {
 		replace penectomy_e = 1 if strpos(`cptx', "amputation penis")
 		replace throat_e = 1 if strpos(`cptx', "tracheoplasty") | strpos(`cptx', "larynx")
 		replace facial_e = 1 if strpos(`cptx', "setback ant frontal") | strpos(`cptx', "reconstruction orbit") | strpos(`cptx', "forehead") | strpos(`cptx', "craniofacial") | strpos(`cptx', "trachea")
+		
+		replace operation = 1 if ftm_top_e==1 & operation==0
+		replace operation = 2 if hysterectomy_e==1 & operation==0
+		replace operation = 3 if vaginectomy_vulvectomy_e==1 & operation==0
+		replace operation = 4 if scrotoplasty_e==1 & operation==0
+		
+		replace operation = 6 if mtf_top_e==1 & operation==0
+		replace operation = 7 if orchiectomy_e==1 & operation==0
+		replace operation = 8 if vaginoplasty_e==1 & operation==0
+		replace operation = 9 if clitoroplasty_e==1 & operation==0
+		replace operation = 11 if penectomy_e==1 & operation==0
+		replace operation = 13 if throat_e==1 & operation==0
+		replace operation = 14 if facial_e==1 & operation==0
+		
 	}
 }
-
-replace ftm_top_e = 1 if top_surgery==1 & transgender_type==1
-replace mtf_top_e = 1 if top_surgery==1 & transgender_type==2
 
 foreach cpt_field of varlist `cpt_fields' {
 	quietly {
 		replace ftm_genital_e = 1 if `cpt_field'==55980
 		replace mtf_genital_e = 1 if `cpt_field'==55970
 		replace urethroplasty_e = 1 if `cpt_field'==53430 | `cpt_field'==53410
+		
+		replace operation = 5 if ftm_genital_e==1 & operation==0
+		replace operation = 10 if urethroplasty_e==1 & operation==0
+		replace operation = 12 if mtf_genital_e==1 & operation==0
 	}
 }
 
-replace operation = 1 if ftm_top_e==1
-replace operation = 2 if hysterectomy_e==1
-replace operation = 3 if vaginectomy_vulvectomy_e==1
-replace operation = 4 if scrotoplasty_e==1
-replace operation = 5 if ftm_genital_e==1
-replace operation = 6 if mtf_top_e==1
-replace operation = 7 if orchiectomy_e==1
-replace operation = 8 if vaginoplasty_e==1
-replace operation = 9 if clitoroplasty_e==1
-replace operation = 10 if urethroplasty_e==1
-replace operation = 11 if penectomy_e==1
-replace operation = 12 if mtf_genital_e==1
-replace operation = 13 if throat_e==1
-replace operation = 14 if facial_e==1
-
-label define operation 0 "Unknown" 1 "FTM Top Surgery" 2 "Hysterectomy" 3 "Vaginectomy/Vulvectomy" 4 "Scrotoplasty/Testicular Prostheses" 5 "Genital Intersex Surg Female Male" 6 "MTF Top Surgery" 7 "Orchiectomy" 8 "Vaginoplasty" 9 "Clitoroplasty" 10 "Urethroplasty" 11 "Penectomy" 12 "Genital Intersex Surg Male Female" 13 "Laryngeal/Tracheoplasty" 14 "Facial"
+label define operation 0 "Unknown" 1 "FTM Top Surgery" 2 "Hysterectomy" 3 "Vaginectomy/Vulvectomy" 4 "Scrotoplasty/Testicular Prostheses" 5 "Genital Intersex Surg Female Male" 6 "MTF Top Surgery" 7 "Orchiectomy" 8 "Vaginoplasty" 9 "Clitoroplasty" 10 "Urethroplasty" 11 "Penectomy" 12 "Genital Intersex Surg Male Female" 13 "Laryngeal/Tracheoplasty" 14 "Facial Remodeling"
 
 /* Exclusion Criteria */
 // Revision surgery, secondary procedrue, complication not included: ""revision" "excision tracheal stenosis" "closure ureterocutaneous fistula" "exc breast les preop plmt rad marker" "clsr urethrostomy""
@@ -128,30 +137,36 @@ replace operation_class = 7 if multioperation>1
 generate multisite_e = (multisite>1)
 generate multioperation_e = (operation_class==7)
 
+generate hyperbili_e = prbili > 1.9 & prbili < .
+generate highalp_e = pralkph > 147 & pralkph < .
+generate high_hct_e = prhct > 52 & prhct < .
+generate low_hct_e = prhct < 38
+
 /* Now let's look at the subgroup of patients who had surgery at two different sites at once */
 
 local nbaseline_characteristics age BMI optime ///
 	 prsodm prbun prcreat pralbum prbili prsgot pralkph prwbc prhct prplate prptt prinr
-local cbaseline_characteristics sex_e race_american_indian_e race_asian_e race_black_e race_nh_pi_e race_white_e ///
+local cbaseline_characteristics race_american_indian_e race_asian_e race_black_e race_nh_pi_e race_white_e ///
 	 smoke_e fnstatus2_e diabetes2_e prsepsis2_e ///
 	 hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e  any_comorbidities ///
 	 hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain ///
 	 plastics_e ortho_e gensurg_e gyn_e urology_e ent_e resident_involvement_e ///
-	 top_surgery mtf_surgery top_surgery ftm_top_e ftm_internal_e ftm_bottom_e mtf_top_e mtf_bottom_e head_neck_e multioperation_e ///
-	 
-local complications new_sssi_e new_dssi_e new_ossi_e dehis_e ///
-	oupneumo_e othdvt_e urninfec_e renafail_e cnscva_e neurodef_e pulembol_e othbleed_e ///
-	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e reoperation1_e
+	 top_surgery mtf_surgery ftm_top_e ftm_internal_e ftm_bottom_e mtf_top_e mtf_bottom_e head_neck_e multioperation_e ///
+	 hyperbili_e highalp_e high_hct_e low_hct_e
 	
-local predictors age BMI optime race2_e ///
-	smoke_e fnstatus2_e highasa diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hxpvd_e hypermed_e any_comorbidities ///
-	race_american_indian_e race_asian_e race_black_e race_nh_pi_e race_white_e ///
+local complications new_sssi_e new_dssi_e new_ossi_e dehis_e ///
+	oupneumo_e othdvt_e renafail_e cnscva_e neurodef_e pulembol_e othbleed_e ///
+	neurodef_e rbc_need_e sepsis_septic_shock mi_cardiac_arrest_cva failwean_reintub death_e reoperation1_e unplannedreadmission1_e	
+	
+local predictors age BMI optime ///
+	prsodm prbun prcreat pralbum prbili prsgot pralkph prwbc prhct prplate prptt prinr ///
+	smoke_e fnstatus2_e diabetes2_e prsepsis2_e ///
+	hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e  any_comorbidities ///
+	hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain ///
 	plastics_e ortho_e gensurg_e gyn_e urology_e ent_e resident_involvement_e ///
 	top_surgery mtf_surgery ftm_top_e ftm_internal_e ftm_bottom_e mtf_top_e mtf_bottom_e head_neck_e multioperation_e ///
-	prsodm prbun prcreat pralbum prbili prsgot pralkph prwbc prhct prplate prptt prinr ///
 
 local comorbidities smoke_e diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e hypermed_e hx_tia_cva hx_cardiac_ischemia hx_pvd_rest_pain
-
 local complications `complications' any_complication
 
 /* Variable Labels */
@@ -167,6 +182,10 @@ label variable mtf_bottom_e "MTF Bottom Surgery"
 label variable multioperation_e "Multi-Operation"
 label variable head_neck_e "Head/Neck Surgery"
 label variable mtf_surgery "MTF"
+label variable hyperbili_e "Hyperbilirubinemia"
+label variable highalp_e "High Alk Phos"
+label variable high_hct_e "Elevated Hematocrit"
+label variable low_hct_e "Low Hematocrit"
 
 /* FTM vs. MTF */
 local summary_i=2
@@ -237,9 +256,18 @@ foreach var of varlist `predictors' {
 /* Does the difference in complication rates persist when possible cofounders are 
 included all in the same model?*/
 
-/* To limit variables in model, only adding if these were predictors in the univariate regression */
-//logistic any_complication optime top_surgery ftm_top_e mtf_bottom_e multioperation prhct prptt
-/* To increase power, preop labs were omitted because of relatively fewer observations; put in a  different analysis*/
-//logistic any_complication age BMI race_black_e race_white_e hypermed_e any_comorbidities gensurg_e gyn_e ent_e optime top_surgery ftm_top_e mtf_top_e mtf_bottom multioperation_e
-//logistic any_complication age BMI optime race_black_e race_white_e diabetes2_e hypermed_e any_comorbidities mtf_surgery top_surgery multioperation_e
-logistic any_complication optime mtf_top_e ftm_top_e mtf_bottom_e multioperation
+/* 
+Regression run with all predictors significant in univariate analysis
+
+Dropped if <80% of observations present.
+
+ */
+
+ /*
+logistic any_complication age BMI optime ///
+		smoke_e diabetes2_e ///
+		hypermed_e  any_comorbidities ///
+		plastics_e gensurg_e gyn_e urology_e ///
+		mtf_surgery ftm_top_e ftm_internal_e ftm_bottom_e mtf_top_e mtf_bottom_e multioperation_e
+*/
+logistic any_complication optime ftm_top_e mtf_top_e mtf_bottom_e multioperation_e
