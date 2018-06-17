@@ -8,19 +8,25 @@ quietly {
 	local table_type `5'
 	local dependent_var `6'
 	local independent_var `7'
+	local subgroup_var `8'
 
 	//use "`excel_file'"
 	putexcel set "`excel_file'", sheet("`excel_sheet'") modify
 	
 	if "`table_type'" == "ttest" {
-		// ttest `var', by(transgender_type)
 		quietly {
 			summarize `independent_var'
 			return list
 			local overall_mean = r(mean)
 			local overall_sd = r(sd)
 
-			ttest `independent_var', by(`dependent_var')
+			if ~missing("`subgroup_var'") {
+				ttest `independent_var' if `subgroup_var'==1, by(`dependent_var')
+			}
+			else {
+				ttest `independent_var', by(`dependent_var')
+			}
+			
 			return list
 			local observations = r(N_1) + r(N_2)
 			
@@ -31,13 +37,21 @@ quietly {
 			local sd_1 : display %04.3f `r(sd_1)'
 			local sd_2 : display %04.3f `r(sd_2)'
 			local p : display %04.3f `r(p)'
-			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("Mean `overall_mean' (SD=`overall_sd')") D`rownum'=("Mean `mu_1' (SD=`sd_1')") E`rownum'=("Mean `mu_2' (SD=`sd_2')") F`rownum'=("`p'")
+			// Format: Depdendent variable	#obs Mean_all (SD_all) Mean1 (SD1) Mean2 (SD2) pval
+			//putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("Mean `overall_mean' (SD=`overall_sd')") D`rownum'=("Mean `mu_1' (SD=`sd_1')") E`rownum'=("Mean `mu_2' (SD=`sd_2')") F`rownum'=("`p'")
+			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		
 		}
 	}
 	else if "`table_type'" == "summarize" {
 		quietly {
-			summarize `dependent_var'
+			if ~missing("`subgroup_var'") {
+				summarize `dependent_var' if `subgroup_var'==1
+			}
+			else {
+				summarize `dependent_var'
+			}
+			
 			return list
 			
 			local mu : display %04.3f `r(mean)'
@@ -49,13 +63,18 @@ quietly {
 	else if "`table_type'" == "chi2" {
 		// tab `var' transgender_type if `var'<., chi2 exact row column
 		quietly {
-			tab `independent_var' `dependent_var' if `independent_var'<., chi2 exact row column matcell(freq)
+			//tab `independent_var' `dependent_var' if `independent_var'<., chi2 exact row column matcell(freq)
+			
+			if ~missing("`subgroup_var'") {
+				tab `independent_var' `dependent_var' if `independent_var'<. & `subgroup_var'==1, chi2 exact row column matcell(freq)
+			}
+			else {
+				tab `independent_var' `dependent_var' if `independent_var'<., chi2 exact row column matcell(freq)
+			}
 			return list
 			forvalues i=1/2 {
 				local freq_val_`i' = freq[2,`i']
 				local total_val_`i'= freq[1,`i'] + `freq_val_`i''
-				//matlist(freq)
-				//matlist(names)
 				local percent_val_`i' = `freq_val_`i''/`total_val_`i''  * 100 
 				
 				local total_val_`i' : display %04.3f `total_val_`i''
@@ -74,11 +93,18 @@ quietly {
 		noisily {
 			disp "Independent variable: `independent_var'"
 			disp "Dependent variable: `dependent_var'"
-			tab `independent_var' `dependent_var' if `independent_var'<., row column matcell(freq)
+			//tab `independent_var' `dependent_var' if `independent_var'<., row column matcell(freq)
+			
+			if ~missing("`subgroup_var'") {
+				tab `independent_var' `dependent_var' if `independent_var'<. & `subgroup_var'==1, row column matcell(freq)
+			}
+			else {
+				tab `independent_var' `dependent_var' if `independent_var'<., row column matcell(freq)
+			}
 			return list
 			matlist(freq)
 			//matlist(names)
-			// Get number of dependent and independent classes.
+			// Get number of dependent & independent classes.
 			putexcel A`rownum'=("`:var label `independent_var''")
 			putexcel B`rownum'=("`:var label `dependent_var''")
 			matrix V = J(`r(c)', 1, 1)
@@ -111,7 +137,14 @@ quietly {
 	else if "`table_type'" == "logistic" {
 		// logistic any_complication `var'
 		quietly {
-			capture logistic `dependent_var' `independent_var' 
+			//capture logistic `dependent_var' `independent_var' 
+			if ~missing("`subgroup_var'") {
+				capture logistic `dependent_var' `independent_var' if `subgroup_var'==1
+			}
+			else {
+				capture logistic `dependent_var' `independent_var' 
+			}
+			
 			if _rc!=0 {
 				putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("Outcome does not vary") C`rownum'=("N/A")
 			} 
