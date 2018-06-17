@@ -216,6 +216,17 @@ label variable high_hct_e "Elevated Hematocrit"
 label variable low_hct_e "Low Hematocrit"
 
 /* FTM vs. MTF */
+local prediction_i=2
+local subspecialty_i=2
+local subspecialty_i_2=2
+
+local len_n_baseline_characteristics : word count `nbaseline_characteristics'
+
+do put_all_in_excel "`excel_file'" "baseline" 2 1 "ttest" transgender_type "`nbaseline_characteristics'"
+do put_all_in_excel "`excel_file'" "baseline" (2+`len_n_baseline_characteristics') 1 "chi2" transgender_type "`cbaseline_characteristics'"
+do put_all_in_excel "`excel_file'" "complication" 2 1 "chi2" transgender_type "`complications'"
+
+/*
 local summary_i=2
 local baseline_i=2
 local complication_i=2
@@ -241,6 +252,7 @@ foreach var of varlist `complications' {
 	do put_in_excel "`excel_file'" "complication" `complication_i' 1 "chi2" transgender_type `var'
 	local complication_i = `complication_i' + 1
 }
+*/
 
 putexcel set "`excel_file'", sheet("operation site") modify
 local operation_site_row = 2

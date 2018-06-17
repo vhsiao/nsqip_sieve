@@ -37,6 +37,7 @@ foreach var of varlist n_demographics {
 	//ttest `var', by(obese)
 	//regress `var' BMI
 	do put_in_excel "`excel_file'" "baseline" `baseline_i' 1 "ttest" obese `var'
+	local baseline_i = `baseline_i' + 1
 }
 
 // Out of total patients who received ex lap

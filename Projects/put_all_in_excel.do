@@ -1,8 +1,8 @@
 /*
-foreach var of varlist `complications' {
+foreach var of varlist `dependent_var_list' {
 	disp "Variable: `independent_var'"
-	do put_in_excel "`excel_file'" "complication" `complication_i' 1 "chi2" transgender_type `var'
-	local complication_i = `complication_i' + 1
+	do put_in_excel "`excel_file'" "complication" `i' 1 "chi2" transgender_type `var'
+	local i = `i' + 1
 }
 */
 
@@ -12,7 +12,15 @@ quietly {
 	local rownum `3'
 	local colnum `4'
 	local table_type `5'
-	local dependent_var_list `6'
-	local independent_var `7'
+	local independent_var `6'
+	local dependent_var_list `7'
 	local subgroup_var `8'
+	
+	local i = `rownum'
+	
+	foreach var of varlist `dependent_var_list' {
+		disp "Variable: `var'"
+		do put_in_excel "`excel_file'" "`excel_sheet'" `i' 1 "`table_type'" `independent_var' `var'
+		local i = `i' + 1
+	}
 }

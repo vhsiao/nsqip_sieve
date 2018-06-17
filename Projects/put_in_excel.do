@@ -38,7 +38,6 @@ quietly {
 			local sd_2 : display %04.3f `r(sd_2)'
 			local p : display %04.3f `r(p)'
 			// Format: Depdendent variable	#obs Mean_all (SD_all) Mean1 (SD1) Mean2 (SD2) pval
-			//putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("`observations'") C`rownum'=("Mean `overall_mean' (SD=`overall_sd')") D`rownum'=("Mean `mu_1' (SD=`sd_1')") E`rownum'=("Mean `mu_2' (SD=`sd_2')") F`rownum'=("`p'")
 			putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		
 		}
@@ -90,7 +89,7 @@ quietly {
 		}
 	}
 	else if "`table_type'" == "tab" {
-		noisily {
+		quietly {
 			disp "dependent variable: `dependent_var'"
 			disp "independent variable: `independent_var'"
 			//tab `dependent_var' `independent_var' if `dependent_var'<., row column matcell(freq)
