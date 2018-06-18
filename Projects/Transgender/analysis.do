@@ -197,23 +197,25 @@ local comorbidities smoke_e diabetes2_e hxchf_e hxcopd_e discancr_e dialysis_e h
 local complications `complications' any_complication_nonlifethreaten
 
 /* Variable Labels */
-label variable transgender_type "MTF/FTM"
-label variable top_surgery "Top Surgery"
-label variable operation "Operation"
-label variable operation_site "Operation Site"
-label variable ftm_top_e "FTM Top Surgery"
-label variable ftm_internal_e "Hysterectomy/Oophorectomy"
-label variable ftm_bottom_e "Vaginectomy/Vulvectomy"
-label variable mtf_top_e "MTF Top Surgery"
-label variable mtf_bottom_e "MTF Bottom Surgery"
-label variable multioperation_e "Multi-Operation"
-label variable multisite_e "Multiple Sites"
-label variable head_neck_e "Head/Neck Surgery"
-label variable mtf_surgery "MTF"
-label variable hyperbili_e "Hyperbilirubinemia"
-label variable highalp_e "High Alk Phos"
-label variable high_hct_e "Elevated Hematocrit"
-label variable low_hct_e "Low Hematocrit"
+quietly {
+	label variable transgender_type "MTF/FTM"
+	label variable top_surgery "Top Surgery"
+	label variable operation "Operation"
+	label variable operation_site "Operation Site"
+	label variable ftm_top_e "FTM Top Surgery"
+	label variable ftm_internal_e "Hysterectomy/Oophorectomy"
+	label variable ftm_bottom_e "Vaginectomy/Vulvectomy"
+	label variable mtf_top_e "MTF Top Surgery"
+	label variable mtf_bottom_e "MTF Bottom Surgery"
+	label variable multioperation_e "Multi-Operation"
+	label variable multisite_e "Multiple Sites"
+	label variable head_neck_e "Head/Neck Surgery"
+	label variable mtf_surgery "MTF"
+	label variable hyperbili_e "Hyperbilirubinemia"
+	label variable highalp_e "High Alk Phos"
+	label variable high_hct_e "Elevated Hematocrit"
+	label variable low_hct_e "Low Hematocrit"
+}
 
 /* FTM vs. MTF */
 local subspecialty_i=2
@@ -224,52 +226,43 @@ local len_n_baseline_characteristics : word count `nbaseline_characteristics'
 do put_all_in_excel "`excel_file'" "baseline" 2 1 "ttest" transgender_type "`nbaseline_characteristics'"
 do put_all_in_excel "`excel_file'" "baseline" (2+`len_n_baseline_characteristics') 1 "chi2" transgender_type "`cbaseline_characteristics'"
 do put_all_in_excel "`excel_file'" "complication" 2 1 "chi2" transgender_type "`complications'"
-do put_all_in_excel "`excel_file'" "prediction" 2 1 "logistic" any_complication_nonlifethreaten "`predictors'"
+do put_all_in_excel "`excel_file'" "prediction" 2 1 "logistic" "`predictors'" any_complication_nonlifethreaten "independent"
 
 putexcel set "`excel_file'", sheet("operation site") modify
 local operation_site_row = 2
 
 /* Complications (row) by operation site (column) */
-foreach dependent_var of varlist `complications' {
-	putexcel A`operation_site_row'=("`:var label `dependent_var''")
-	local operation_site_row = `operation_site_row' + 1
-}
-forvalues i=1/7 {
-	disp "Variable: `independent_var'"
-	
-	local operation_site_col = 65 + `i'
-	local col = "`=char(`operation_site_col')'"
-	local overall_freq_val = 0
-	
-	local operation_site_row = 2
-	local j = 1
+quietly {
 	foreach dependent_var of varlist `complications' {
-		di "Complication: `dependent_var'"
-		tab operation_site `dependent_var' if operation_site<., row column matcell(freq)
-		matlist(freq)
-		return list
-		local freq_val_`j' = freq[`i', 2]
-		local percent_val_`j' = `freq_val_`j'' / (`freq_val_`j'' + freq[`i', 1]) * 100
-		local percent_val_`j' : display %03.2f `percent_val_`j''
-		putexcel `col'`operation_site_row'=("`freq_val_`j'' (`percent_val_`j''%)")
-		local j = `j' + 1
+		putexcel A`operation_site_row'=("`:var label `dependent_var''")
 		local operation_site_row = `operation_site_row' + 1
+	}
+	forvalues i=1/7 {
+		disp "Variable: `independent_var'"
+		
+		local operation_site_col = 65 + `i'
+		local col = "`=char(`operation_site_col')'"
+		local overall_freq_val = 0
+		
+		local operation_site_row = 2
+		local j = 1
+		foreach dependent_var of varlist `complications' {
+			di "Complication: `dependent_var'"
+			tab operation_site `dependent_var' if operation_site<., row column matcell(freq)
+			matlist(freq)
+			return list
+			local freq_val_`j' = freq[`i', 2]
+			local percent_val_`j' = `freq_val_`j'' / (`freq_val_`j'' + freq[`i', 1]) * 100
+			local percent_val_`j' : display %03.2f `percent_val_`j''
+			putexcel `col'`operation_site_row'=("`freq_val_`j'' (`percent_val_`j''%)")
+			local j = `j' + 1
+			local operation_site_row = `operation_site_row' + 1
+		}
 	}
 }
 
-do put_in_excel "`excel_file'" "surgical_subspecialty" `subspecialty_i' 2 "tab" surgspec_e operation
-do put_in_excel "`excel_file'" "surgical_subspecialty_2" `subspecialty_i_2' 2 "tab" surgspec_e operation_site
-
-/*	
-foreach var of varlist `predictors' {
-	do put_in_excel "`excel_file'" "prediction" `prediction_i' 1 "logistic" any_complication_nonlifethreaten `var'
-	local prediction_i = `prediction_i' + 1
-}
-*/
-
-/* Does the difference in complication rates persist when possible cofounders are 
-included all in the same model?*/
-
+	do put_in_excel "`excel_file'" "surgical_subspecialty" `subspecialty_i' 2 "tab" surgspec_e operation
+	do put_in_excel "`excel_file'" "surgical_subspecialty_2" `subspecialty_i_2' 2 "tab" surgspec_e operation_site
 /* 
 Regression run with all predictors significant in univariate analysis
 

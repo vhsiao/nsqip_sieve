@@ -1,6 +1,24 @@
 set more off
 
-quietly {
+noisily {
+
+/* 
+Runs statistical tests and writes results to excel file. 
+excel_file: path to excel file to write to
+excel_sheet: name of excel sheet within excel_file
+rownum, colnum: entry at which result will be written. Both integers.
+table_type: ttest, chi2, tab, logistic
+independent_var: independent variable for analysis
+dependent_var: dependent variable for analysis
+row_label_spec: whether to label each entry by the independent or dependent variable.
+subgroup_var: if specified, will run analysis only for those subjects where `subgroup_var' == 1
+
+row_label_spec and subgroup_var are optional, but subgroup_var cannot be specified
+ unless a value is given for row_label_spec. 
+
+*/
+
+
 	local excel_file `1'
 	local excel_sheet `2'
 	local rownum `3'
@@ -8,13 +26,24 @@ quietly {
 	local table_type `5'
 	local independent_var `6'
 	local dependent_var `7'
-	local subgroup_var `8'
-	local row_label `9'
-
-	//use "`excel_file'"
-	putexcel set "`excel_file'", sheet("`excel_sheet'") modify
-	if missing(`row_label') {
+	local row_label_spec `8'
+	local subgroup_var `9'
+	
+	if ~missing("`row_label_spec'") & "`row_label_spec'"=="independent" {
+		local row_label = "`: var label `independent_var''"
+	} 
+	else {
+		local row_label = "`: var label `dependent_var''"
 	}
+	
+	if ~missing("`subgroup_var'") & "`subgroup_var'"~="" {
+		local subgroup_only = 1
+	} 
+	else {
+		local subgroup_only = 0
+	}
+
+	putexcel set "`excel_file'", sheet("`excel_sheet'") modify
 	
 	if "`table_type'" == "ttest" {
 		quietly {
@@ -23,7 +52,7 @@ quietly {
 			local overall_mean = r(mean)
 			local overall_sd = r(sd)
 
-			if ~missing("`subgroup_var'") {
+			if `subgroup_only' {
 				ttest `dependent_var' if `subgroup_var'==1, by(`independent_var')
 			}
 			else {
@@ -41,13 +70,13 @@ quietly {
 			local sd_2 : display %04.3f `r(sd_2)'
 			local p : display %04.3f `r(p)'
 			// Format: Depdendent variable	#obs Mean_all (SD_all) Mean1 (SD1) Mean2 (SD2) pval
-			putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
+			putexcel A`rownum'=("`row_label'") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		
 		}
 	}
 	else if "`table_type'" == "summarize" {
 		quietly {
-			if ~missing("`subgroup_var'") {
+			if `subgroup_only' {
 				summarize `independent_var' if `subgroup_var'==1
 			}
 			else {
@@ -59,15 +88,13 @@ quietly {
 			local mu : display %04.3f `r(mean)'
 			local sd : display %04.3f `r(sd)'
 			
-			putexcel A`rownum'=("`: var label `independent_var''") B`rownum'=("`r(N)'") C`rownum'=("`mu'") D`rownum'=("`sd'")
+			putexcel A`rownum'=("`row_label'") B`rownum'=("`r(N)'") C`rownum'=("`mu'") D`rownum'=("`sd'")
 		}
 	}
 	else if "`table_type'" == "chi2" {
 		// tab `var' transgender_type if `var'<., chi2 exact row column
 		quietly {
-			//tab `dependent_var' `independent_var' if `dependent_var'<., chi2 exact row column matcell(freq)
-			
-			if ~missing("`subgroup_var'") {
+			if `subgroup_only' {
 				tab `dependent_var' `independent_var' if `dependent_var'<. & `subgroup_var'==1, chi2 exact row column matcell(freq)
 			}
 			else {
@@ -88,7 +115,7 @@ quietly {
 			local overall_percent_val : display %04.3f `overall_percent_val'
 			
 			local p : display %04.3f `r(p)'
-			putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'")
+			putexcel A`rownum'=("`row_label'") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'")
 		}
 	}
 	else if "`table_type'" == "tab" {
@@ -97,7 +124,7 @@ quietly {
 			disp "independent variable: `independent_var'"
 			//tab `dependent_var' `independent_var' if `dependent_var'<., row column matcell(freq)
 			
-			if ~missing("`subgroup_var'") {
+			if `subgroup_only' {
 				tab `dependent_var' `independent_var' if `dependent_var'<. & `subgroup_var'==1, row column matcell(freq)
 			}
 			else {
@@ -137,19 +164,13 @@ quietly {
 		}
 	}
 	else if "`table_type'" == "logistic" {
-		// logistic any_complication `var'
-		quietly {
-			//capture logistic `independent_var' `dependent_var' 
-			if ~missing("`subgroup_var'") {
-				capture logistic `independent_var' `dependent_var' if `subgroup_var'==1
+		noisily {
+			if `subgroup_only' {
+				logistic `dependent_var' `independent_var' if `subgroup_var'==1
 			}
 			else {
-				capture logistic `independent_var' `dependent_var' 
+				logistic `dependent_var' `independent_var' 
 			}
-			
-			if _rc!=0 {
-				putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("Outcome does not vary") C`rownum'=("N/A")
-			} 
 			else {
 				return list
 				matrix results = r(table)
@@ -163,7 +184,7 @@ quietly {
 				local ll: display %04.3f `ll'
 				local ul: display %04.3f `ul'
 				local p: display %04.3f `p'
-				putexcel A`rownum'=("`: var label `dependent_var''") B`rownum'=("`or' (`ll'-`ul')") C`rownum'=("`p'")
+				putexcel A`rownum'=("`row_label'") B`rownum'=("`or' (`ll'-`ul')") C`rownum'=("`p'")
 			}
 		}
 	}
