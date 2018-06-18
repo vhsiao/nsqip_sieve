@@ -2,5 +2,6 @@ Data
 *.dta
 .DS_Store
 *.xls
-*.xslx
+*.xlsx
+
 
