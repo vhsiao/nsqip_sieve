@@ -9,9 +9,12 @@ quietly {
 	local independent_var `6'
 	local dependent_var `7'
 	local subgroup_var `8'
+	local row_label `9'
 
 	//use "`excel_file'"
 	putexcel set "`excel_file'", sheet("`excel_sheet'") modify
+	if missing(`row_label') {
+	}
 	
 	if "`table_type'" == "ttest" {
 		quietly {

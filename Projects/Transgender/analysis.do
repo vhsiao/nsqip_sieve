@@ -216,7 +216,6 @@ label variable high_hct_e "Elevated Hematocrit"
 label variable low_hct_e "Low Hematocrit"
 
 /* FTM vs. MTF */
-local prediction_i=2
 local subspecialty_i=2
 local subspecialty_i_2=2
 
@@ -225,34 +224,7 @@ local len_n_baseline_characteristics : word count `nbaseline_characteristics'
 do put_all_in_excel "`excel_file'" "baseline" 2 1 "ttest" transgender_type "`nbaseline_characteristics'"
 do put_all_in_excel "`excel_file'" "baseline" (2+`len_n_baseline_characteristics') 1 "chi2" transgender_type "`cbaseline_characteristics'"
 do put_all_in_excel "`excel_file'" "complication" 2 1 "chi2" transgender_type "`complications'"
-
-/*
-local summary_i=2
-local baseline_i=2
-local complication_i=2
-local prediction_i=2
-local subspecialty_i=2
-local subspecialty_i_2=2
-
-foreach var of varlist `nbaseline_characteristics' {
-	disp "Variable: `var'"
-	do put_in_excel "`excel_file'" "baseline" `baseline_i' 1 "ttest" transgender_type `var' 
-	local baseline_i = `baseline_i' + 1
-}
-
-foreach var of varlist `cbaseline_characteristics' {
-	disp "Variable: `var'"
-	do put_in_excel "`excel_file'" "baseline" `baseline_i' 1 "chi2" transgender_type `var' 
-	local summary_i = `summary_i' + 1
-	local baseline_i = `baseline_i' + 1
-}
-
-foreach var of varlist `complications' {
-	disp "Variable: `independent_var'"
-	do put_in_excel "`excel_file'" "complication" `complication_i' 1 "chi2" transgender_type `var'
-	local complication_i = `complication_i' + 1
-}
-*/
+do put_all_in_excel "`excel_file'" "prediction" 2 1 "logistic" any_complication_nonlifethreaten "`predictors'"
 
 putexcel set "`excel_file'", sheet("operation site") modify
 local operation_site_row = 2
@@ -287,11 +259,13 @@ forvalues i=1/7 {
 
 do put_in_excel "`excel_file'" "surgical_subspecialty" `subspecialty_i' 2 "tab" surgspec_e operation
 do put_in_excel "`excel_file'" "surgical_subspecialty_2" `subspecialty_i_2' 2 "tab" surgspec_e operation_site
-	
+
+/*	
 foreach var of varlist `predictors' {
 	do put_in_excel "`excel_file'" "prediction" `prediction_i' 1 "logistic" any_complication_nonlifethreaten `var'
 	local prediction_i = `prediction_i' + 1
 }
+*/
 
 /* Does the difference in complication rates persist when possible cofounders are 
 included all in the same model?*/
