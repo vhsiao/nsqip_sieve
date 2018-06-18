@@ -29,6 +29,10 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 	local row_label_spec `8'
 	local subgroup_var `9'
 	
+	local field_width 4
+	local decimal_places 3
+	local format_string "%0`field_width'.`decimal_places'f"
+	
 	if ~missing("`row_label_spec'") & "`row_label_spec'"=="independent" {
 		local row_label = "`: var label `independent_var''"
 	} 
@@ -62,13 +66,13 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			return list
 			local observations = r(N_1) + r(N_2)
 			
-			local overall_mean : display %04.3f `overall_mean'
-			local overall_sd : display %04.3f `overall_sd'
-			local mu_1 : display %04.3f `r(mu_1)'
-			local mu_2 : display %04.3f `r(mu_2)'
-			local sd_1 : display %04.3f `r(sd_1)'
-			local sd_2 : display %04.3f `r(sd_2)'
-			local p : display %04.3f `r(p)'
+			local overall_mean : display `format_string' `overall_mean'
+			local overall_sd : display `format_string' `overall_sd'
+			local mu_1 : display `format_string' `r(mu_1)'
+			local mu_2 : display `format_string' `r(mu_2)'
+			local sd_1 : display `format_string' `r(sd_1)'
+			local sd_2 : display `format_string' `r(sd_2)'
+			local p : display `format_string' `r(p)'
 			// Format: Depdendent variable	#obs Mean_all (SD_all) Mean1 (SD1) Mean2 (SD2) pval
 			putexcel A`rownum'=("`row_label'") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		
@@ -85,15 +89,14 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			
 			return list
 			
-			local mu : display %04.3f `r(mean)'
-			local sd : display %04.3f `r(sd)'
+			local mu : display `format_string' `r(mean)'
+			local sd : display `format_string' `r(sd)'
 			
 			putexcel A`rownum'=("`row_label'") B`rownum'=("`r(N)'") C`rownum'=("`mu'") D`rownum'=("`sd'")
 		}
 	}
 	else if "`table_type'" == "chi2" {
-		// tab `var' transgender_type if `var'<., chi2 exact row column
-		quietly {
+		noisily {
 			if `subgroup_only' {
 				tab `dependent_var' `independent_var' if `dependent_var'<. & `subgroup_var'==1, chi2 exact row column matcell(freq)
 			}
@@ -106,16 +109,26 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 				local total_val_`i'= freq[1,`i'] + `freq_val_`i''
 				local percent_val_`i' = `freq_val_`i''/`total_val_`i''  * 100 
 				
-				local total_val_`i' : display %04.3f `total_val_`i''
-				local percent_val_`i' : display %04.3f `percent_val_`i''
+				local total_val_`i' : display `format_string' `total_val_`i''
+				local percent_val_`i' : display `format_string' `percent_val_`i''
 			}
 			local overall_freq_val = `freq_val_1' + `freq_val_2'
 			local overall_percent_val = `overall_freq_val' / `r(N)' * 100
 			
-			local overall_percent_val : display %04.3f `overall_percent_val'
+			local overall_percent_val : display `format_string' `overall_percent_val'
 			
-			local p : display %04.3f `r(p)'
-			putexcel A`rownum'=("`row_label'") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'")
+			if `freq_val_1'<5 | `freq_val_2'<5 {
+			// Use Fisher's exact test p value for small cell frequencies.
+				local p = `r(p_exact)'
+				local fshr = " (Fisher's)"
+			}
+			else {
+				local p = `r(p)'
+				local fshr = ""
+			}
+			
+			local p : display `format_string' `p'
+			putexcel A`rownum'=("`row_label'") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'`fshr'")
 		}
 	}
 	else if "`table_type'" == "tab" {
@@ -157,35 +170,39 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 					local col = "`=char(`col')'"
 					local freq = freq[`i', `j']
 					local perc = (`freq'/`row_sum') * 100
-					local perc : display %04.3f `perc'
+					local perc : display `format_string' `perc'
 					putexcel `col'`row'=("`freq' (`perc'%)")
 				}
 			}
 		}
 	}
-	else if "`table_type'" == "logistic" {
-		noisily {
+	else if "`table_type'" == "logistic" | "`table_type'" == "linear" {
+		if "`table_type'" == "logistic" {
+			local cmd = "logistic"
+		}
+		else {
+			local cmd = "regress"
+		}
+		quietly {
 			if `subgroup_only' {
-				logistic `dependent_var' `independent_var' if `subgroup_var'==1
+				`cmd' `dependent_var' `independent_var' if `subgroup_var'==1
 			}
 			else {
-				logistic `dependent_var' `independent_var' 
+				`cmd' `dependent_var' `independent_var' 
 			}
-			else {
-				return list
-				matrix results = r(table)
-				matlist(results)
-				local or = results[1,1]
-				local ll = results[5,1]
-				local ul = results[6,1]
-				local p = results[4,1]
-				
-				local or: display %04.3f `or'
-				local ll: display %04.3f `ll'
-				local ul: display %04.3f `ul'
-				local p: display %04.3f `p'
-				putexcel A`rownum'=("`row_label'") B`rownum'=("`or' (`ll'-`ul')") C`rownum'=("`p'")
-			}
+			return list
+			matrix results = r(table)
+			matlist(results)
+			local or_coef = results[1,1]
+			local ll = results[5,1]
+			local ul = results[6,1]
+			local p = results[4,1]
+			
+			local or_coef: display `format_string' `or'
+			local ll: display `format_string' `ll'
+			local ul: display `format_string' `ul'
+			local p: display `format_string' `p'
+			putexcel A`rownum'=("`row_label'") B`rownum'=("`or_coef' (`ll'-`ul')") C`rownum'=("`p'")
 		}
 	}
 	else {
