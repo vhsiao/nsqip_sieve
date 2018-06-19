@@ -32,6 +32,7 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 	local field_width 4
 	local decimal_places 3
 	local format_string "%0`field_width'.`decimal_places'f"
+	local fshr_threshold = 5 //Fisher's exact test will be performed instead of chi2 if cell frequencies are at or below the Fisher threshold. 
 	
 	if ~missing("`row_label_spec'") & "`row_label_spec'"=="independent" {
 		local row_label = "`: var label `independent_var''"
@@ -117,7 +118,7 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			
 			local overall_percent_val : display `format_string' `overall_percent_val'
 			
-			if `freq_val_1'<5 | `freq_val_2'<5 {
+			if `freq_val_1'<`fshr_threshold'+1 | `freq_val_2'<`fshr_threshold'+1 {
 			// Use Fisher's exact test p value for small cell frequencies.
 				local p = `r(p_exact)'
 				local fshr = " (Fisher's)"
@@ -198,7 +199,7 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			local ul = results[6,1]
 			local p = results[4,1]
 			
-			local or_coef: display `format_string' `or'
+			local or_coef: display `format_string' `or_coef'
 			local ll: display `format_string' `ll'
 			local ul: display `format_string' `ul'
 			local p: display `format_string' `p'
