@@ -74,6 +74,7 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			local sd_1 : display `format_string' `r(sd_1)'
 			local sd_2 : display `format_string' `r(sd_2)'
 			local p : display `format_string' `r(p)'
+			
 			// Format: Depdendent variable	#obs Mean_all (SD_all) Mean1 (SD1) Mean2 (SD2) pval
 			putexcel A`rownum'=("`row_label'") B`rownum'=("`observations'") C`rownum'=("`overall_mean' (`overall_sd')") D`rownum'=("`mu_1' (`sd_1')") E`rownum'=("`mu_2' (`sd_2')") F`rownum'=("`p'")
 		
@@ -116,8 +117,6 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			local overall_freq_val = `freq_val_1' + `freq_val_2'
 			local overall_percent_val = `overall_freq_val' / `r(N)' * 100
 			
-			local overall_percent_val : display `format_string' `overall_percent_val'
-			
 			if `freq_val_1'<`fshr_threshold'+1 | `freq_val_2'<`fshr_threshold'+1 {
 			// Use Fisher's exact test p value for small cell frequencies.
 				local p = `r(p_exact)'
@@ -129,6 +128,8 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			}
 			
 			local p : display `format_string' `p'
+			local overall_percent_val : display `format_string' `overall_percent_val'
+			
 			putexcel A`rownum'=("`row_label'") B`rownum'=(r(N)) C`rownum'=("`overall_freq_val' (`overall_percent_val'%)") D`rownum'=("`freq_val_1' (`percent_val_1'%)") E`rownum'=("`freq_val_2' (`percent_val_2'%)") F`rownum'=("`p'`fshr'")
 		}
 	}
@@ -178,6 +179,10 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 		}
 	}
 	else if "`table_type'" == "logistic" | "`table_type'" == "linear" {
+		summarize `dependent_var'
+		return list
+		local sd_dep = `r(sd)'
+		local sample_size = `r(N)'
 		if "`table_type'" == "logistic" {
 			local cmd = "logistic"
 		}
