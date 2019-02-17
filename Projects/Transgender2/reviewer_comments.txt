@@ -1,0 +1,56 @@
+Reviewer Comments:
+
+Reviewer #2: * Introduction
+o In second sentence of introduction, it may not be required to have quotations surrounding the definition of a term. Consider rephrasing sentence to allow for omission and to decrease dense use of quotations in first paragraph.
+o Consider re-wording third paragraph, especially sentences 2-3 for improved syntax
+o Consider moving first sentence of fourth paragraph to end of third paragraph. Begin paragraph 4 with "Although emerging…"
+
+* Methods
+o Narrowing cases with multiple procedures down to principle procedure may lead to some bias by inadvertently excluding the additional surgeries that otherwise would have been listed if done separately.
+o It appears that some variables are later reported that are not mentioned as being measured in the Methods section.
+
+* Results and Discussion
+o A large range of information is presented here without significant connectivity or logical progression. Consider better organization of this section. It does not flow well from subject to subject.
+o Operative time often correlates with level of complexity or labor required of a case. In comparing several different procedures, consider dividing this into subgroups by procedure to help control for complication rate further and identify variables by procedure that contribute. This may take a larger number of subjects for adequate power.
+o For pre-operative lab values or race listed in Table 5, it does not seem necessary to add these to the table. May simply leave stated in Results section the reason for not including them in the regression.
+o Elaborate on whether the surgical subspecialties accounted for include any combined cases or does this only account for specialty of the primary surgeon (of the principal procedure, when applicable).
+o Resident involvement does not have any information on Table 5 pertaining to OR or reason for being blank.
+o Recommend rearranging format of Table 5 (and some other tables) with n noted. Becomes redundant and somewhat unnecessary to reiterate in each table. Likely could remove this column in Table 5.
+
+* References
+o The references in the introduction begin with 2, instead of 1.
+o Recommend to place suprascript numerals for in-text citation after the period, if placing at the end of the sentence. (i.e. …end of sentence.1 as opposed to, …end of sentence1.)
+
+* Overall
+o Good concept for research topic, but potentially very broad in terms of data collected and therefore difficult to present in a streamline manner or in larger detail.
+o Needs work in organization and delivery of information to make paper cohesive and straightforward.
+
+
+
+Reviewer #3: In the manuscript "The Landscape of Transgender Surgery in the United States," the authors provide an overview of FTM and MTF terminology, gender affirming surgical procedures and hormonal therapy. The authors interrogated NSQIP for procedural codes encompassing gender affirming surgical procedures and assessed the resultant population's demographics, comorbidities, complications, and pre-operative laboratory studies. The analysis included 953 patients, and a statistically significant difference was found in MTF vs FTM race composition, age at time of surgery, BMI, and presence of medical comorbidities. Preoperative hematocrit, alkaline phosphatase, and bilirubin values were found to be statistically higher in FTM versus MTF populations. Both MTF and FTM bottom surgeries had the highest complication rates. Multiple surgical specialties were involved in gender affirming surgical care. The authors conclude that the FTM and MTF populations are distinct medical entities.
+The authors should be commended on their attempt to analyze transgender population characteristics. However, there are multiple aspects of the paper that require further consideration.
+
+
+-Abstract: The authors state that 953 patients are included in the analysis; however, the patient populations are noted to have "319 MTF, 633 FTM," which sum to 952. A small detail, but important.
+-Introduction: The authors briefly mention hormonal therapy in paragraph 2, then discuss associated comorbidities and laboratory abnormalities that may be associated with these therapies in paragraph 6. The separation of these two ideas is a poor choice, as the authors use comorbidities and laboratory values as a critical measurement in the methods.
+-Methods: The inclusion of ICD-10 code F64.1 "dual-role transvestism" is incorrect, as patients with this diagnosis are not gender dysphoric and are not gender affirmation surgery candidates.
+-Results: It is grammatically incorrect to start any sentence with a numerical value. Please revise.
+-Results: The authors should not use the Results section to interpret findings. (e.g., preoperative PTT is marginally higher in MTF "due to chance alone.")
+-Table 2: The authors include an assessment of pre-operative laboratory values to evaluate the effect of hormone use on the surgical candidate. However, the authors include variables that are not related to hormone use and do not add any value to the manuscript. Elective surgical candidates would not have leukopenia/leukocytosis, hypo-/hypernatremia, or renal dysfunction. The inclusion of these variables are not clinically significant, nor are they relevant to the manuscript's methods.
+-Results: The authors find that the MTF patients were significantly older at the time of surgery. When controlling for age, did the patients still have a difference in medical comorbidities?
+-Results: The authors compare results of surgical procedures that have vastly different complication profiles. While the authors mention this limitation in the Discussion, it is a major problem in this study.
+-Table 2: This table is bulky and should be revised.
+-Table 4: This table contains very little information and should be eliminated as a table.
+-Table 5: This table has multiple rows that contain no information and should undergo considerable revision.
+-Table 6: This table also has multiple cells without information and should undergo considerable revision.
+-Figures 1 and 2 do not add any significant information to this manuscript and should be eliminated.
+-Discussion: The authors conclude that the MTF and FTM populations are two distinct populations with different characteristics, which is well understood. However, the authors compare the two groups against each other throughout the manuscript. The authors can still describe the epidemiology of the two distinct populations without comparing every characteristic.
+-Discussion: It is widely understood that NSQIP is severely limited in characterizing the disease-specific complications, particularly in less common procedures. This point needs to be discussed in the Discussion as a major limitation.
+-Discussion: A prospective evaluation of gender affirmation surgery complication rates is a good future direction. The authors state that randomized controlled trials should be performed. It is not clear how an RCT could be performed on patients electing to undergo gender affirmation surgery. Please explain.
+
+1- not useful to compare FTM to MTF these are known to be a separate set of patients in whom the 2 groups undergo very different treatments.
+A more useful comparison would be transgender to population controls. Further many consider gender to be a spectrum, not 2 distinct groups so the authors suggestion in the abstract to consider binary groups is not generally accepted.
+2-It is useful to know that plastic surgery is dominating this emerging field currently.
+3-It is not known whether or not the patients were actually taking hormones. They are certainly not a prerequisite for all of the listed procedures. Therefore most of the data regarding lab values are not very helpful. Modern hormone regimens are not thought to cause as many side effects as hypothesized by the study group. Many of the associations seem to be a stretch for example hopefully FTM patients would not undergo elective cases with common duct stones caused by their estrogen actively causing hyperbilirubinemia.
+4 The strengths of this study are it gives an up-to-date snap shot of prevalence and types of procedures currently performed in academic centers under a diagnosis of gender dysphoria and who is doing what. I a time of uncertain CPT codes for a lot of these procedures the currently used CPT codes could be emphasized more.
+ 

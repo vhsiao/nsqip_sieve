@@ -12,16 +12,13 @@ do initiate_excel "`excel_file'" "univariate_linear_regression" "Outcome Coeff. 
 do "./obesity_trauma/encode_variables"
 do "./obesity_trauma/label_variables"
 
-gen ln_bmi = ln(BMI)
-drop if BMI<10 | BMI>50
-
 /* Analysis */
 local baseline_i=2
 local complication_i=2
 local prediction_i=2
 
 /* Variable Sets */
-local n_demographics Agey ln_bmi
+local n_demographics Agey BMI
 local c_demographics sex_num race_num
 
 local n_complications RBC1st24hrs HospLOS
@@ -44,7 +41,7 @@ local len_n_outcomes : word count `n_outcomes'
 local len_c_outcomes : word count `c_outcomes'
 
 // T tests for continuous variables
-// Linear regression on ln_bmi
+// Linear regression on BMI
 do put_all_in_excel "`excel_file'" "demographics" 2 1 "ttest" obese "`n_demographics'"
 do put_all_in_excel "`excel_file'" "demographics" (2+`len_n_demographics') 1 "chi2" obese "`c_demographics'"
 do put_all_in_excel "`excel_file'" "complications" 2 1 "ttest" obese "`n_complications'"
@@ -52,7 +49,7 @@ do put_all_in_excel "`excel_file'" "complications" (2+`len_n_complications') 1 "
 do put_all_in_excel "`excel_file'" "outcomes" 2 1 "ttest" obese "`n_outcomes'"
 do put_all_in_excel "`excel_file'" "outcomes" (2+`len_n_outcomes') 1 "chi2" obese "`c_outcomes'"
 do put_all_in_excel "`excel_file'" "outcomes" (2+`len_n_outcomes'+`len_c_outcomes') 1 "chi2" obese "`exlap_or_reasons'" "dependent" "ex_lap"
-do put_all_in_excel "`excel_file'" "univariate_linear_regression" 2 1 "linear" ln_bmi "`num_outcome_vars'" "dependent"
-do put_all_in_excel "`excel_file'" "univariate_logit_regression" 2 1 "logistic" ln_bmi "`cat_outcome_vars'" "dependent
+do put_all_in_excel "`excel_file'" "univariate_linear_regression" 2 1 "linear" BMI "`num_outcome_vars'" "dependent"
+do put_all_in_excel "`excel_file'" "univariate_logit_regression" 2 1 "logistic" BMI "`cat_outcome_vars'" "dependent
 
-logistic gi_resection ln_bmi Agey sex_num race_num
+logistic gi_resection BMI Agey sex_num race_num

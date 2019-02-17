@@ -56,7 +56,7 @@ foreach var of varlist `categorical_vars' {
 }
 
 local binary1 = "dehis oupneumo othdvt oprenafl renainsf urninfec cnscva supinfec wndinfd orgspcssi neurodef reintub pulembol failwean cnscoma cdarrest cdmi othbleed othgrafl othsysep othseshock"
-local binary2 = "renafail cva cvano discancr hxmi hxchf hxcopd hxtia hxpvd hxangina dialysis hypermed diabetes2 returnor reoperation1 steroid smoke ascites wtloss electsurg dnr etoh ventilat ventpatos restpain prvpci prvpcs cpneumon esovar para quad bleeddis transfus chemo radio pregnancy proper30 emergncy tumorcns unplannedreadmission1 unplannedreadmission2 unplannedreadmission3 unplannedreadmission4 unplanreadmission5"
+local binary2 = "renafail cva cvano discancr hxmi hxchf hxcopd hxtia hxpvd hxangina dialysis hypermed diabetes2 returnor readmission1 reoperation1 steroid smoke ascites wtloss electsurg dnr etoh ventilat ventpatos restpain prvpci prvpcs cpneumon esovar para quad bleeddis transfus chemo radio pregnancy proper30 emergncy tumorcns unplannedreadmission1 unplannedreadmission2 unplannedreadmission3 unplannedreadmission4 unplanreadmission5"
 foreach var of local binary1 {
 	do encode_and_label_binary `var' "no complication" "`: var label `var''"
 }
@@ -137,7 +137,7 @@ label variable prsepsis2_e "Previous Sepsis"
 label variable fnstatus_dependent "Functional Status Partially/Totally Dependent"
 label variable highasa "ASA Class >1"
 label variable death_e "Death"
-label variable rbc_need_e "Need for RBC <72h of Operation"
+label variable rbc_need_e "Need for RBC intraoperatively"
 label variable new_sssi_e "New Superficial Surgical Site Infection"
 label variable new_dssi_e "New Deep Surgical Site Infection"
 label variable new_ossi_e "New Organ Space Infection"

@@ -30,7 +30,7 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 	local subgroup_var `9'
 	
 	local field_width 4
-	local decimal_places 3
+	local decimal_places 2
 	local format_string "%0`field_width'.`decimal_places'f"
 	local fshr_threshold = 5 //Fisher's exact test will be performed instead of chi2 if cell frequencies are at or below the Fisher threshold. 
 	
@@ -119,11 +119,11 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			
 			if `freq_val_1'<`fshr_threshold'+1 | `freq_val_2'<`fshr_threshold'+1 {
 			// Use Fisher's exact test p value for small cell frequencies.
-				local p = `r(p_exact)'
+				local p `r(p_exact)'
 				local fshr = " (Fisher's)"
 			}
 			else {
-				local p = `r(p)'
+				local p `r(p)'
 				local fshr = ""
 			}
 			
@@ -203,13 +203,14 @@ row_label_spec and subgroup_var are optional, but subgroup_var cannot be specifi
 			local ll = results[5,1]
 			local ul = results[6,1]
 			local p = results[4,1]
+			local obs = `e(N)'
 			
 			local or_coef: display `format_string' `or_coef'
 			local ll: display `format_string' `ll'
 			local ul: display `format_string' `ul'
 			local p: display `format_string' `p'
-			putexcel A`rownum'=("`row_label'") B`rownum'=("`or_coef' (`ll'-`ul')") C`rownum'=("`p'")
-		}
+			putexcel A`rownum'=("`row_label'") B`rownum'=("`obs'") C`rownum'=("`or_coef' (`ll'-`ul')") D`rownum'=("`p'")
+		} 
 	}
 	else {
 		disp "Unrecognized table type `table_type'"
